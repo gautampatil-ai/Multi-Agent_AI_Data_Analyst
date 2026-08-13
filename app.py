@@ -44,11 +44,17 @@ def clean_data(df):
 
     for col in df.columns:
 
-        if df[col].dtype == "object":
-            df[col] = df[col].fillna("Unknown")
+        if pd.api.types.is_numeric_dtype(df[col]):
+
+            df[col] = df[col].fillna(
+                df[col].mean()
+            )
 
         else:
-            df[col] = df[col].fillna(df[col].mean())
+
+            df[col] = df[col].fillna(
+                "Unknown"
+            )
 
     return df
 
@@ -232,7 +238,14 @@ if uploaded_file:
 
     df = pd.read_csv(uploaded_file)
 
+    # DEBUG: show column types
+    st.subheader("Column Data Types")
+    st.write(df.dtypes)
+
     st.success("Dataset uploaded successfully")
+
+    # DATA CLEANING
+    df = clean_data(df)
 
     # --------------------------
     # RAW DATA
