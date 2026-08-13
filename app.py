@@ -6,7 +6,270 @@ import plotly.express as px
 # -----------------------------------------------------
 # PAGE CONFIG
 # -----------------------------------------------------
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+import numpy as np
 
+# ------------------------------------------------
+# PAGE CONFIG
+# ------------------------------------------------
+
+st.set_page_config(
+    page_title="Multi-Agent AI Data Analyst",
+    page_icon="🤖",
+    layout="wide"
+)
+
+# ------------------------------------------------
+# CUSTOM CSS
+# ------------------------------------------------
+
+st.markdown("""
+<style>
+
+.stApp{
+    background-color:#0F172A;
+}
+
+[data-testid="stSidebar"]{
+    background-color:#111827;
+}
+
+h1,h2,h3{
+    color:white;
+}
+
+.metric-container{
+    background:#1E293B;
+    padding:15px;
+    border-radius:15px;
+}
+
+.insight-card{
+    background:#172554;
+    padding:15px;
+    border-radius:12px;
+    margin-bottom:10px;
+    color:white;
+}
+
+.recommend-card{
+    background:#14532D;
+    padding:15px;
+    border-radius:12px;
+    margin-bottom:10px;
+    color:white;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ------------------------------------------------
+# FUNCTIONS
+# ------------------------------------------------
+
+def clean_data(df):
+
+    df = df.drop_duplicates()
+
+    for col in df.columns:
+
+        if pd.api.types.is_numeric_dtype(df[col]):
+
+            df[col] = df[col].fillna(
+                df[col].mean()
+            )
+
+        else:
+
+            df[col] = df[col].fillna(
+                "Unknown"
+            )
+
+    return df
+
+
+def generate_insights(df):
+
+    insights = []
+
+    numeric_cols = df.select_dtypes(
+        include=np.number
+    ).columns
+
+    for col in numeric_cols:
+
+        insights.append(
+            f"Average {col}: {round(df[col].mean(),2)}"
+        )
+
+        insights.append(
+            f"Maximum {col}: {round(df[col].max(),2)}"
+        )
+
+    return insights
+
+
+def generate_recommendations():
+
+    return [
+        "Focus on high-performance regions.",
+        "Track monthly sales trends.",
+        "Investigate low-profit products.",
+        "Build forecasting models."
+    ]
+
+
+# ------------------------------------------------
+# SIDEBAR
+# ------------------------------------------------
+
+with st.sidebar:
+
+    st.title("🤖 AI Analyst")
+
+    st.markdown("""
+### Features
+
+✅ Data Cleaning Agent
+
+✅ EDA Agent
+
+✅ Visualization Agent
+
+✅ Insight Agent
+
+✅ Recommendation Agent
+""")
+
+# ------------------------------------------------
+# HEADER
+# ------------------------------------------------
+
+st.markdown("""
+<div style='text-align:center;padding:20px'>
+<h1 style='font-size:3rem'>
+🤖 Multi-Agent AI Data Analyst
+</h1>
+
+<p style='font-size:20px;color:#CBD5E1'>
+AI Powered Business Intelligence Dashboard
+</p>
+</div>
+""", unsafe_allow_html=True)
+
+# ------------------------------------------------
+# FILE UPLOAD
+# ------------------------------------------------
+
+uploaded_file = st.file_uploader(
+    "📂 Upload CSV Dataset",
+    type=["csv"]
+)
+
+# ------------------------------------------------
+# MAIN APP
+# ------------------------------------------------
+
+if uploaded_file:
+
+    df = pd.read_csv(uploaded_file)
+
+    st.success("Dataset Loaded Successfully")
+
+    # CLEANING AGENT
+
+    st.header("🧹 Data Cleaning Agent")
+
+    df = clean_data(df)
+
+    st.success("Data Cleaned")
+
+    # KPI SECTION
+
+    rows = df.shape[0]
+    cols = df.shape[1]
+    missing = df.isnull().sum().sum()
+    duplicates = df.duplicated().sum()
+
+    c1,c2,c3,c4 = st.columns(4)
+
+    c1.metric("Rows", rows)
+    c2.metric("Columns", cols)
+    c3.metric("Missing", missing)
+    c4.metric("Duplicates", duplicates)
+
+    # TABS
+
+    tab1,tab2,tab3,tab4 = st.tabs([
+        "📊 Dashboard",
+        "📈 Visualizations",
+        "🧠 Insights",
+        "💡 Recommendations"
+    ])
+
+    # -----------------------------------
+    # DASHBOARD
+    # -----------------------------------
+
+    with tab1:
+
+        st.subheader("Dataset Preview")
+
+        st.dataframe(df.head(20))
+
+        st.subheader("Statistics")
+
+        st.dataframe(
+            df.describe(include="all")
+        )
+
+    # -----------------------------------
+    # VISUALIZATION
+    # -----------------------------------
+
+    with tab2:
+
+        numeric_cols = list(
+            df.select_dtypes(include=np.number).columns
+        )
+
+        if len(numeric_cols):
+
+            column = st.selectbox(
+                "Select Numeric Column",
+                numeric_cols
+            )
+
+            fig = px.histogram(
+                df,
+                x=column,
+                color_discrete_sequence=["#6366F1"]
+            )
+
+            st.plotly_chart(
+                fig,
+                use_container_width=True
+            )
+
+            if len(numeric_cols) > 1:
+
+                corr = df[numeric_cols].corr()
+
+                fig2 = px.imshow(
+                    corr,
+                    text_auto=True,
+                    color_continuous_scale="RdBu"
+                )
+
+                st.plotly_chart(
+                    fig2,
+                    use_container_width=True
+                )
+
+    # -----------------------------------
+    # INSIGHTS
+    # --------------------------------
 st.set_page_config(
     page_title="Multi-Agent AI Data Analyst",
     page_icon="🤖",
